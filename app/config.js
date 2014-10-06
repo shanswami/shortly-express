@@ -41,6 +41,18 @@ db.knex.schema.hasTable('clicks').then(function(exists) {
   }
 });
 
+db.knex.schema.hasTable('tokens').then(function(exists) {
+  if (!exists) {
+    db.knex.schema.createTable('tokens', function (token) {
+      token.increments('id').primary();
+      token.string('token', 255);
+      token.string('username', 255);
+    }).then(function (table) {
+      console.log('Created Table', table);
+    });
+  }
+});
+
 /************************************************************/
 // Add additional schema definitions below
 /************************************************************/

@@ -2,6 +2,7 @@ var express = require('express');
 var util = require('./lib/utility');
 var partials = require('express-partials');
 var bodyParser = require('body-parser');
+var knex = require('knex');
 
 
 var db = require('./app/config');
@@ -22,25 +23,25 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
 
+app.get('/', util.restrict,
+function(req, res) {
 
-app.get('/', 
+  res.render('index');
+});
+
+app.get('/create', util.restrict,
 function(req, res) {
   res.render('index');
 });
 
-app.get('/create', 
-function(req, res) {
-  res.render('index');
-});
-
-app.get('/links', 
+app.get('/links', util.restrict,
 function(req, res) {
   Links.reset().fetch().then(function(links) {
     res.send(200, links.models);
   });
 });
 
-app.post('/links', 
+app.post('/links', util.restrict,
 function(req, res) {
   var uri = req.body.url;
 
@@ -78,7 +79,27 @@ function(req, res) {
 // Write your authentication routes here
 /************************************************************/
 
+app.get('/login',
+function(req, res) {
+  res.render('login');
+});
 
+app.post('/login',
+function(req, res) {
+  console.log("hit the login POST route");
+  console.log(db.knex('tokens').select('username', 'token').from('tokens'));
+  console.log(req.body);
+});
+
+app.get('/signup',
+function(req, res) {
+  res.render('signup');
+});
+
+app.post('/signup',
+function(req, res) {
+  console.log("hit the signup POST route");
+});
 
 /************************************************************/
 // Handle the wildcard route last - if all other routes fail
