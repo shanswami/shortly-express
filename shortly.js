@@ -1,8 +1,10 @@
 var express = require('express');
+var session = require('express-session');
 var util = require('./lib/utility');
 var partials = require('express-partials');
 var bodyParser = require('body-parser');
 var knex = require('knex');
+var bcrypt = require('bcrypt-nodejs');
 
 
 var db = require('./app/config');
@@ -22,6 +24,10 @@ app.use(bodyParser.json());
 // Parse forms (signup/login)
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
+app.use(session({
+  secret: 'nicki minaj ass implants',
+  cookie: { secure: true }
+}));
 
 app.get('/', util.restrict,
 function(req, res) {
@@ -44,6 +50,7 @@ function(req, res) {
 app.post('/links', util.restrict,
 function(req, res) {
   var uri = req.body.url;
+  console.log(uri);
 
   if (!util.isValidUrl(uri)) {
     console.log('Not a valid url: ', uri);
@@ -87,8 +94,28 @@ function(req, res) {
 app.post('/login',
 function(req, res) {
   console.log("hit the login POST route");
-  console.log(db.knex('tokens').select('username', 'token').from('tokens'));
-  console.log(req.body);
+  new User({
+    username: req.body.username
+  })
+  .fetch().then(function(found) {
+    if (found) {
+      console.log(JSON.stringify(found));
+      var hashedPassword = found.attributes.password;
+      console.log(req.body.password, '+++', hashedPassword);
+      if (bcrypt.compareSync(req.body.password, hashedPassword)) {
+        req.session.regenerate(function(){
+          req.session.user = found.attributes;
+          res.redirect('/');
+        });
+      } else {
+        console.log('wrong password dumbass');
+        res.redirect('/login');
+      }
+    } else {
+      console.log('USERNAME/PASSWORD COMBO INVALID');
+      res.redirect('/login');
+    }
+  });
 });
 
 app.get('/signup',
@@ -98,7 +125,29 @@ function(req, res) {
 
 app.post('/signup',
 function(req, res) {
-  console.log("hit the signup POST route");
+  console.log('hit the signup POST route');
+
+  new User({ username: req.body.username }).fetch().then(function(found) {
+    if (found) {
+      alert('USERNAME ALREADY EXISTS');
+      res.render('signup');
+      // USERNAME ALREADY EXISTS
+    } else {
+      var user = {};
+      user.username = (req.body.username);
+      var password = (req.body.password);
+      user.password = bcrypt.hashSync(password, bcrypt.genSaltSync(10));
+      var newUser = new User(user);
+      newUser.save().then(function(newUser) {
+        console.log("Created new user: " + newUser);
+        req.session.regenerate(function(){
+          Users.add(newUser);
+          req.session.user = newUser;
+          res.redirect('/');
+        });
+      });
+    }
+  });
 });
 
 /************************************************************/

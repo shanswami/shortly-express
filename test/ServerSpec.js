@@ -1,5 +1,6 @@
 var expect = require('chai').expect;
 var request = require('request');
+var bcrypt = require('bcrypt-nodejs');
 
 var db = require('../app/config');
 var Users = require('../app/collections/users');
@@ -59,7 +60,7 @@ describe('', function() {
       });
   });
 
-  describe('Link creation:', function(){
+  xdescribe('Link creation:', function(){
 
     var requestWithSession = request.defaults({jar: true});
 
@@ -100,7 +101,7 @@ describe('', function() {
       });
     });
 
-    describe('Shortening links:', function(){
+    xdescribe('Shortening links:', function(){
 
       var options = {
         'method': 'POST',
@@ -149,7 +150,7 @@ describe('', function() {
 
     }); // 'Shortening links'
 
-    describe('With previously saved urls:', function(){
+    xdescribe('With previously saved urls:', function(){
 
       var link;
 
@@ -292,7 +293,7 @@ describe('', function() {
     beforeEach(function(done){
       new User({
           'username': 'Phillip',
-          'password': 'Phillip'
+          'password': bcrypt.hashSync('Phillip', bcrypt.genSaltSync(10))
       }).save().then(function(){
         done()
       });
