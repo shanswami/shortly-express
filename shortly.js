@@ -25,8 +25,9 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
 app.use(session({
-  secret: 'nicki minaj ass implants',
-  cookie: { secure: true }
+  secret: 'keyboard cat',
+  saveUninitialized: true,
+  resave: true
 }));
 
 app.get('/', util.restrict,
@@ -50,7 +51,6 @@ function(req, res) {
 app.post('/links', util.restrict,
 function(req, res) {
   var uri = req.body.url;
-  console.log(uri);
 
   if (!util.isValidUrl(uri)) {
     console.log('Not a valid url: ', uri);
@@ -99,10 +99,9 @@ function(req, res) {
   })
   .fetch().then(function(found) {
     if (found) {
-      console.log(JSON.stringify(found));
       var hashedPassword = found.attributes.password;
-      console.log(req.body.password, '+++', hashedPassword);
       if (bcrypt.compareSync(req.body.password, hashedPassword)) {
+        console.log("correct password")
         req.session.regenerate(function(){
           req.session.user = found.attributes;
           res.redirect('/');
@@ -118,6 +117,14 @@ function(req, res) {
   });
 });
 
+app.get('/logout',
+  function(req,res) {
+    console.log("logout route being hit");
+    // req.session = null;
+    req.session.destroy();
+    res.redirect('/login');
+  });
+
 app.get('/signup',
 function(req, res) {
   res.render('signup');
@@ -129,9 +136,8 @@ function(req, res) {
 
   new User({ username: req.body.username }).fetch().then(function(found) {
     if (found) {
-      alert('USERNAME ALREADY EXISTS');
+      console.log('USERNAME ALREADY EXISTS');
       res.render('signup');
-      // USERNAME ALREADY EXISTS
     } else {
       var user = {};
       user.username = (req.body.username);
